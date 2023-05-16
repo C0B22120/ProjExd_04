@@ -277,6 +277,27 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
+class Shield(pg.sprite.Sprite):
+    """
+    壁のスキル
+    """
+    def __init__(self, bird: Bird, life:int):
+        super().__init__()
+        color = (0, 0, 0)
+        self.image = pg.Surface((20, bird.rect.height*2))
+        pg.draw.rect(self.image, color, pg.Rect(0, 0, 20, bird.rect.height*2))
+        self.rect = self.image.get_rect()
+        self.rect.centerx = bird.rect.centerx + 50
+        self.rect.centery = bird.rect.centery
+        self.life = life 
+
+
+    def update(self):
+        self.life -= 1
+        if self.life < 0:
+            self.kill()
+
+
 def main():
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -288,6 +309,7 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
+    shields = pg.sprite.Group()
 
     tmr = 0
     clock = pg.time.Clock()
@@ -298,8 +320,12 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE and key_lst[pg.K_LSHIFT]:
                 beams.add(NeoBeam(bird, 10).gen_beams())
-            elif event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
+            if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
+
+            if event.type == pg.KEYDOWN and event.key == pg.K_CAPSLOCK and score.score >= 50 and len(shields) == 0:
+                shields.add(Shield(bird, 400))
+                score.score -= 50
             if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
                 bird.speed = 20
             if event.type == pg.KEYUP and event.key == pg.K_LSHIFT:
@@ -322,10 +348,21 @@ def main():
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.score_up(1)  # 1点アップ
+        for bomb in (pg.sprite.groupcollide(bombs, shields, True, False)).keys():
+            exps.add(Explosion(bomb, 50))
+            score.score_up(1)
 
         if  event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT and score.score >= 100:
             bird.change_state("hyper",500)
             score.score_up(-100)
+        if len(pg.sprite.spritecollide(bird, bombs, True)) != 0:
+            bird.change_img(8, screen) # こうかとん悲しみエフェクト
+            score.update(screen)
+            pg.display.update()
+            time.sleep(2)
+            return
+
+
 
         for bomb in pg.sprite.spritecollide(bird, bombs, True):
             if bird.state == "hyper": 
@@ -347,6 +384,8 @@ def main():
         bombs.draw(screen)
         exps.update()
         exps.draw(screen)
+        shields.update()
+        shields.draw(screen)
         score.update(screen)
         pg.display.update()
         tmr += 1
