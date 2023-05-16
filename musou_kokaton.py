@@ -321,7 +321,7 @@ def main():
             time.sleep(2)
             return
         
-        for bomb in pg.sprite.groupcollide(bombs, gravitys, True, True).keys():
+        for bomb in pg.sprite.groupcollide(bombs, gravitys, True, False).keys():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.score_up(1)  # 1点アップ
 
