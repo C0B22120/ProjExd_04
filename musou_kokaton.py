@@ -292,7 +292,7 @@ def main():
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
             if event.type == pg.KEYDOWN and event.key == pg.K_TAB:
-                if score.score > 50:
+                if score.score >= 50:
                     gravitys.add(Gravity(bird, 200, 500))    
                     score.score -= 50
         screen.blit(bg_img, [0, 0])
