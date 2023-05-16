@@ -184,7 +184,6 @@ class NeoBeam(pg.sprite.Sprite):
         neo_beams = []
         for i in range(self.num):
             neo_beams.append(Beam(self.bird, 50-(100/self.num)*i))
-        print(neo_beams)
         return neo_beams
 
 
