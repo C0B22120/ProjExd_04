@@ -71,6 +71,8 @@ class Bird(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = xy
         self.speed = 10
+        self.state = "normal"
+        self.hyper_life = -1
 
     def change_img(self, num: int, screen: pg.Surface):
         """
@@ -80,6 +82,10 @@ class Bird(pg.sprite.Sprite):
         """
         self.image = pg.transform.rotozoom(pg.image.load(f"ex04/fig/{num}.png"), 0, 2.0)
         screen.blit(self.image, self.rect)
+
+    def change_state(self,state,hyper_life):
+        self.hyper_life = hyper_life
+        self.state = state
 
     def update(self, key_lst: list[bool], screen: pg.Surface):
         """
@@ -101,7 +107,13 @@ class Bird(pg.sprite.Sprite):
             self.dire = tuple(sum_mv)
             self.image = self.imgs[self.dire]
         screen.blit(self.image, self.rect)
-    
+        if self.hyper_life > 0:
+            self.image = pg.transform.laplacian(self.image)
+            self.hyper_life -= 1
+        else:
+            self.change_state("normal",-1)
+            self.image = self.imgs[self.dire]
+
     def get_direction(self) -> tuple[int, int]:
         return self.dire
     
@@ -289,12 +301,20 @@ def main():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.score_up(1)  # 1点アップ
 
-        if len(pg.sprite.spritecollide(bird, bombs, True)) != 0:
-            bird.change_img(8, screen) # こうかとん悲しみエフェクト
-            score.update(screen)
-            pg.display.update()
-            time.sleep(2)
-            return
+        if  event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT and score.score >= 100:
+            bird.change_state("hyper",500)
+            score.score_up(-100)
+
+        for bomb in pg.sprite.spritecollide(bird, bombs, True):
+            if bird.state == "hyper": 
+                score.score_up(1)  # 1点アップ
+                exps.add(Explosion(bomb,50))
+            else:
+                bird.change_img(8, screen) # こうかとん悲しみエフェクト
+                score.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                return
 
         bird.update(key_lst, screen)
         beams.update()
